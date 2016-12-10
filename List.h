@@ -1,5 +1,7 @@
 // List.h
 
+#pragma once
+
 #include <stddef.h>
 
 template <class T>
@@ -140,7 +142,11 @@ public:
     Node<T>* Begin();
     Node<T>* End();
 
+    bool Empty();
+    void Clear();
+
     List<T>& Append(T* object);
+    List<T>& InsertFirst(T* object);
 
 private:
     Node<T> head;
@@ -177,8 +183,27 @@ Node<T>* List<T>::End()
 }
 
 template <class T>
+bool List<T>::Empty()
+{
+    return !this->head.InList();
+}
+
+template <class T>
+void List<T>::Clear()
+{
+    this->head.Detach();
+}
+
+template <class T>
 List<T>& List<T>::Append(T* object)
 {
     this->head.InsertBefore(object);
+    return *this;
+}
+
+template <class T>
+List<T>& List<T>::InsertFirst(T* object)
+{
+    this->head.InsertAfter(object);
     return *this;
 }
