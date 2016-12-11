@@ -136,17 +136,25 @@ class List
 public:
     List(size_t offset);
 
-    Node<T>* First();
-    Node<T>* Last();
+    T* First();
+    T* Last();
 
-    Node<T>* Begin();
-    Node<T>* End();
+    T* Begin();
+    T* End();
+    T* Next(T* object);
 
     bool Empty();
     void Clear();
 
     List<T>& Append(T* object);
     List<T>& InsertFirst(T* object);
+
+    List<T>& InsertAfter(T* position, T* object);
+    List<T>& InsertBefore(T* position, T* object);
+
+private:
+    Node<T>* _Node(T* object);
+    size_t _Offset();
 
 private:
     Node<T> head;
@@ -159,27 +167,33 @@ List<T>::List(size_t offset)
 }
 
 template <class T>
-Node<T>* List<T>::First()
+T* List<T>::First()
 {
-    return this->head.NextNode();
+    return this->head.NextObject();
 }
 
 template <class T>
-Node<T>* List<T>::Last()
+T* List<T>::Last()
 {
-    return this->head.PrevNode();
+    return this->head.PrevObject();
 }
 
 template <class T>
-Node<T>* List<T>::Begin()
+T* List<T>::Begin()
 {
     return this->First();
 }
 
 template <class T>
-Node<T>* List<T>::End()
+T* List<T>::End()
 {
-    return &this->head;
+    return this->head.Object();
+}
+
+template <class T>
+T* List<T>::Next(T* object)
+{
+    return _Node(object)->NextObject();
 }
 
 template <class T>
@@ -206,4 +220,31 @@ List<T>& List<T>::InsertFirst(T* object)
 {
     this->head.InsertAfter(object);
     return *this;
+}
+
+template <class T>
+List<T>& List<T>::InsertAfter(T* position, T* object)
+{
+    _Node(position)->InsertAfter(object);
+    return *this;
+}
+
+template <class T>
+List<T>& List<T>::InsertBefore(T* position, T* object)
+{
+    _Node(position)->InsertBefore(object);
+    return *this;
+}
+
+template <class T>
+Node<T>* List<T>::_Node(T* object)
+{
+    auto node = (Node<T>*)((size_t)object + _Offset());
+    return node;
+}
+
+template <class T>
+size_t List<T>::_Offset()
+{
+    return (size_t)&this->head - (size_t)this->head.Object();
 }
