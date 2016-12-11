@@ -39,42 +39,6 @@ public:
     T value;
 };
 
-template <class T>
-class SimpleProperty<T, Property_GetOnly>
-{
-public:
-    SimpleProperty(T& value)
-    : value(value)
-    {
-    }
-
-    operator T() const
-    {
-        return this->value;
-    }
-
-private:
-    T& value;
-};
-
-template <class T>
-class SimpleProperty<T, Property_SetOnly>
-{
-public:
-    SimpleProperty(T& value)
-    : value(value)
-    {
-    }
-
-    void operator= (T&& value)
-    {
-        this->value = value;
-    }
-
-private:
-    T& value;
-};
-
 template <class T, class Container, class GetterSetter, PropertyType type>
 class Property
 {
@@ -84,57 +48,79 @@ template <class T, class Container, class GetterSetter>
 class Property<T, Container, GetterSetter, Property_GetSet>
 {
 public:
-    Property(Container* self)
-    : self(self)
+    Property()
     {
+    }
+
+    Property(T&& value)
+    {
+        this->value = value;
     }
 
     void operator= (T&& value)
     {
-        GetterSetter::Set(this->self, value);
+        Container* self = GetterSetter::ToSelf((size_t)this);
+        GetterSetter::Set(self, value);
     }
 
     operator T() const
     {
-        return GetterSetter::Get(this->self);
+        Container* self = GetterSetter::ToSelf((size_t)this);
+        return GetterSetter::Get(self);
     }
 
 private:
-    Container* self;
+    friend Container;
+
+    T value;
 };
 
 template <class T, class Container, class GetterSetter>
 class Property<T, Container, GetterSetter, Property_GetOnly>
 {
 public:
-    Property(Container* self)
-    : self(self)
+    Property()
     {
     }
 
-    operator T() const
+    Property(T&& value)
     {
-        return GetterSetter::Get(this->self);
+        this->value = value;
+    }
+
+    void operator= (T&& value)
+    {
+        Container* self = GetterSetter::ToSelf((size_t)this);
+        GetterSetter::Set(self, value);
     }
 
 private:
-    Container* self;
+    friend Container;
+
+    T value;
 };
 
 template <class T, class Container, class GetterSetter>
 class Property<T, Container, GetterSetter, Property_SetOnly>
 {
 public:
-    Property(Container* self)
-    : self(self)
+    Property()
     {
     }
 
-    void operator= (T&& value)
+    Property(T&& value)
     {
-        GetterSetter::Set(this->self, value);
+        this->value = value;
+    }
+
+    operator T() const
+    {
+        Container* self = GetterSetter::ToSelf((size_t)this);
+        return GetterSetter::Get(self);
     }
 
 private:
-    Container* self;
+    friend Container;
+
+    T value;
 };
