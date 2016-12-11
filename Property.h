@@ -7,13 +7,13 @@ enum PropertyType
     Property_SetOnly
 };
 
-template <class T, PropertyType type>
+template <class T, class Container, PropertyType type>
 class SimpleProperty
 {
 };
 
-template <class T>
-class SimpleProperty<T, Property_GetSet>
+template <class T, class Container>
+class SimpleProperty<T, Container, Property_GetSet>
 {
 public:
     SimpleProperty()
@@ -35,7 +35,57 @@ public:
         return this->value;
     }
 
+private:
+    friend Container;
+
+    T value;
+};
+
+template <class T, class Container>
+class SimpleProperty<T, Container, Property_GetOnly>
+{
 public:
+    SimpleProperty()
+    {
+    }
+
+    SimpleProperty(T&& value)
+    {
+        this->value = value;
+    }
+
+    operator T() const
+    {
+        return this->value;
+    }
+
+private:
+    friend Container;
+
+    T value;
+};
+
+template <class T, class Container>
+class SimpleProperty<T, Container, Property_SetOnly>
+{
+public:
+    SimpleProperty()
+    {
+    }
+
+    SimpleProperty(T&& value)
+    {
+        this->value = value;
+    }
+
+    void operator= (T&& value)
+    {
+        this->value = value;
+    }
+
+private:
+    friend Container;
+
     T value;
 };
 
