@@ -69,8 +69,8 @@ T* Allocator<T, PoolIncreaseStep>::Allocate()
     }
 
     auto first = this->freeList.First();
-    first->Detach();
-    return first->Object();
+    this->freeList.Remove(first);
+    return first;
 }
 
 template <class T, size_t PoolIncreaseStep>

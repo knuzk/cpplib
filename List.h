@@ -152,6 +152,8 @@ public:
     List<T>& InsertAfter(T* position, T* object);
     List<T>& InsertBefore(T* position, T* object);
 
+    List<T>& Remove(T* object);
+
 private:
     Node<T>* _Node(T* object);
     size_t _Offset();
@@ -233,6 +235,13 @@ template <class T>
 List<T>& List<T>::InsertBefore(T* position, T* object)
 {
     _Node(position)->InsertBefore(object);
+    return *this;
+}
+
+template <class T>
+List<T>& List<T>::Remove(T* object)
+{
+    _Node(object)->Detach();
     return *this;
 }
 

@@ -1,5 +1,7 @@
 // Property.h
 
+#pragma once
+
 enum PropertyType
 {
     Property_GetSet,
