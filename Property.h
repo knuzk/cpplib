@@ -2,177 +2,86 @@
 
 #pragma once
 
-enum PropertyType
-{
-    Property_GetSet,
-    Property_GetOnly,
-    Property_SetOnly
-};
-
-template <class T, class Container, PropertyType type>
+template <class T, class Container>
 class SimpleProperty
 {
-};
-
-template <class T, class Container>
-class SimpleProperty<T, Container, Property_GetSet>
-{
 public:
-    SimpleProperty()
-    {
-    }
+    SimpleProperty() {}
+    SimpleProperty(T&& value) : value(value) {}
 
-    SimpleProperty(T&& value)
-    {
-        this->value = value;
-    }
-
-    void operator= (T&& value)
-    {
-        this->value = value;
-    }
-
-    operator T() const
-    {
-        return this->value;
-    }
-
-private:
+protected:
     friend Container;
-
     T value;
 };
 
-template <class T, class Container>
-class SimpleProperty<T, Container, Property_GetOnly>
-{
-public:
-    SimpleProperty()
-    {
-    }
+#define PROPERTIES_BEGIN(Container) \
+public: \
+    using PropertyContainer=Container; \
+    class Property \
+    { \
+    public: \
+        Property(PropertyContainer* self) : self(self) {} \
+    protected: \
+        PropertyContainer* self; \
+    };
 
-    SimpleProperty(T&& value)
-    {
-        this->value = value;
-    }
+#define PROPERTIES_END() private:
 
-    operator T() const
-    {
-        return this->value;
-    }
+#define PROPERTY_GETSET_2_(T, name) \
+    class : public SimpleProperty<T, PropertyContainer> \
+    { \
+    public: \
+        using SimpleProperty<T, PropertyContainer>::SimpleProperty; \
+        operator const T() const { return this->value; }; \
+        void operator= (T&& value) { this->value = value; }; \
+    } name
 
-private:
-    friend Container;
+#define PROPERTY_GET_2_(T, name) \
+    class : public SimpleProperty<T, PropertyContainer> \
+    { \
+    public: \
+        using SimpleProperty<T, PropertyContainer>::SimpleProperty; \
+        operator const T() const { return this->value; }; \
+    } name
 
-    T value;
-};
+#define PROPERTY_SET_2_(T, name) \
+    class : public SimpleProperty<T, PropertyContainer> \
+    { \
+    public: \
+        using SimpleProperty<T, PropertyContainer>::SimpleProperty; \
+        void operator= (T&& value) { this->value = value; } \
+    } name
 
-template <class T, class Container>
-class SimpleProperty<T, Container, Property_SetOnly>
-{
-public:
-    SimpleProperty()
-    {
-    }
+#define PROPERTY_GETSET_4_(T, name, getter, setter) \
+    class : public Property \
+    { \
+    public: \
+        using Property::Property; \
+        operator const T() const getter; \
+        void operator= (T&& value) setter; \
+    } name
 
-    SimpleProperty(T&& value)
-    {
-        this->value = value;
-    }
+#define PROPERTY_GET_3_(T, name, getter) \
+    class : public Property \
+    { \
+    public: \
+        using Property::Property; \
+        operator const T() const getter; \
+    } name
 
-    void operator= (T&& value)
-    {
-        this->value = value;
-    }
+#define PROPERTY_SET_3_(T, name, setter) \
+    class : public Property \
+    { \
+    public: \
+        using Property::Property; \
+        void operator= (T&& value) setter; \
+    } name
 
-private:
-    friend Container;
+#define PROPERTY_GETSET_(_1, _2, _3, _4, NAME,...) NAME
+#define PROPERTY_GETSET(...) \
+    PROPERTY_GETSET_(__VA_ARGS__, PROPERTY_GETSET_4_, NA, PROPERTY_GETSET_2_)(__VA_ARGS__)
+#define PROPERTY_GET(...) \
+    PROPERTY_GETSET_(__VA_ARGS__, NA, PROPERTY_GET_3_, PROPERTY_GET_2_)(__VA_ARGS__)
+#define PROPERTY_SET(...) \
+    PROPERTY_GETSET_(__VA_ARGS__, NA, PROPERTY_SET_3_, PROPERTY_SET_2_)(__VA_ARGS__)
 
-    T value;
-};
-
-template <class T, class Container, class GetterSetter, PropertyType type>
-class Property
-{
-};
-
-template <class T, class Container, class GetterSetter>
-class Property<T, Container, GetterSetter, Property_GetSet>
-{
-public:
-    Property()
-    {
-    }
-
-    Property(T&& value)
-    {
-        this->value = value;
-    }
-
-    void operator= (T&& value)
-    {
-        Container* self = GetterSetter::ToSelf((size_t)this);
-        GetterSetter::Set(self, value);
-    }
-
-    operator T() const
-    {
-        Container* self = GetterSetter::ToSelf((size_t)this);
-        return GetterSetter::Get(self);
-    }
-
-private:
-    friend Container;
-
-    T value;
-};
-
-template <class T, class Container, class GetterSetter>
-class Property<T, Container, GetterSetter, Property_GetOnly>
-{
-public:
-    Property()
-    {
-    }
-
-    Property(T&& value)
-    {
-        this->value = value;
-    }
-
-    void operator= (T&& value)
-    {
-        Container* self = GetterSetter::ToSelf((size_t)this);
-        GetterSetter::Set(self, value);
-    }
-
-private:
-    friend Container;
-
-    T value;
-};
-
-template <class T, class Container, class GetterSetter>
-class Property<T, Container, GetterSetter, Property_SetOnly>
-{
-public:
-    Property()
-    {
-    }
-
-    Property(T&& value)
-    {
-        this->value = value;
-    }
-
-    operator T() const
-    {
-        Container* self = GetterSetter::ToSelf((size_t)this);
-        return GetterSetter::Get(self);
-    }
-
-private:
-    friend Container;
-
-    T value;
-};
