@@ -45,16 +45,19 @@ public:
     operator const T() const = delete;
 };
 
+template <class Container>
+class Property
+{
+public:
+    Property(Container* self) : self(self) {}
+
+protected:
+    Container* self; 
+};
+
 #define PROPERTIES_BEGIN(Container) \
 public: \
-    using PropertyContainer=Container; \
-    class Property \
-    { \
-    public: \
-        Property(PropertyContainer* self) : self(self) {} \
-    protected: \
-        PropertyContainer* self; \
-    };
+    using PropertyContainer=Container;
 
 #define PROPERTIES_END() private:
 
@@ -68,27 +71,27 @@ public: \
     SimpleProperty<T, PropertyContainer, PropertyType::SET> name
 
 #define PROPERTY_GETSET_4_(T, name, getter, setter) \
-    class : public Property \
+    class : public Property<PropertyContainer> \
     { \
     public: \
-        using Property::Property; \
+        using Property<PropertyContainer>::Property; \
         operator const T() const getter; \
         void operator= (T&& value) setter; \
     } name
 
 #define PROPERTY_GET_3_(T, name, getter) \
-    class : public Property \
+    class : public Property<PropertyContainer> \
     { \
     public: \
-        using Property::Property; \
+        using Property<PropertyContainer>::Property; \
         operator const T() const getter; \
     } name
 
 #define PROPERTY_SET_3_(T, name, setter) \
-    class : public Property \
+    class : public Property<PropertyContainer> \
     { \
     public: \
-        using Property::Property; \
+        using Property<PropertyContainer>::Property; \
         void operator= (T&& value) setter; \
     } name
 
