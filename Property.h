@@ -2,16 +2,47 @@
 
 #pragma once
 
+enum class PropertyType
+{
+    GETSET,
+    GET,
+    SET,
+};
+
+template <class T, class Container, PropertyType type>
+class SimpleProperty;
+
 template <class T, class Container>
-class SimpleProperty
+class SimpleProperty<T, Container, PropertyType::GETSET>
 {
 public:
     SimpleProperty() {}
     SimpleProperty(T&& value) : value(value) {}
 
+    operator const T() const { return this->value; };
+    void operator= (T&& value) { this->value = value; };
+
 protected:
     friend Container;
     T value;
+};
+
+template <class T, class Container>
+class SimpleProperty<T, Container, PropertyType::GET>
+: public SimpleProperty<T, Container, PropertyType::GETSET>
+{
+public:
+    using SimpleProperty<T, Container, PropertyType::GETSET>::SimpleProperty;
+    void operator= (T&& value) = delete;
+};
+
+template <class T, class Container>
+class SimpleProperty<T, Container, PropertyType::SET>
+: public SimpleProperty<T, Container, PropertyType::GETSET>
+{
+public:
+    using SimpleProperty<T, Container, PropertyType::GETSET>::SimpleProperty;
+    operator const T() const = delete;
 };
 
 #define PROPERTIES_BEGIN(Container) \
@@ -28,29 +59,13 @@ public: \
 #define PROPERTIES_END() private:
 
 #define PROPERTY_GETSET_2_(T, name) \
-    class : public SimpleProperty<T, PropertyContainer> \
-    { \
-    public: \
-        using SimpleProperty<T, PropertyContainer>::SimpleProperty; \
-        operator const T() const { return this->value; }; \
-        void operator= (T&& value) { this->value = value; }; \
-    } name
+    SimpleProperty<T, PropertyContainer, PropertyType::GETSET> name
 
 #define PROPERTY_GET_2_(T, name) \
-    class : public SimpleProperty<T, PropertyContainer> \
-    { \
-    public: \
-        using SimpleProperty<T, PropertyContainer>::SimpleProperty; \
-        operator const T() const { return this->value; }; \
-    } name
+    SimpleProperty<T, PropertyContainer, PropertyType::GET> name
 
 #define PROPERTY_SET_2_(T, name) \
-    class : public SimpleProperty<T, PropertyContainer> \
-    { \
-    public: \
-        using SimpleProperty<T, PropertyContainer>::SimpleProperty; \
-        void operator= (T&& value) { this->value = value; } \
-    } name
+    SimpleProperty<T, PropertyContainer, PropertyType::SET> name
 
 #define PROPERTY_GETSET_4_(T, name, getter, setter) \
     class : public Property \
