@@ -45,14 +45,38 @@ public:
     operator const T() const = delete;
 };
 
-template <class Container>
-class Property
+template <class T,class Container, class GetterSetter, PropertyType type>
+class Property;
+
+template <class T, class Container, class GetterSetter>
+class Property<T, Container, GetterSetter, PropertyType::GETSET>
 {
 public:
     Property(Container* self) : self(self) {}
 
+    operator const T() const { return GetterSetter::get(self); };
+    void operator= (T&& value) { GetterSetter::set(self, value); };
+
 protected:
     Container* self; 
+};
+
+template <class T, class Container, class Getter>
+class Property<T, Container, Getter, PropertyType::GET>
+: public Property<T, Container, Getter, PropertyType::GETSET>
+{
+public:
+    using Property<T, Container, Getter, PropertyType::GETSET>::Property;
+    void operator= (T&& value) = delete;
+};
+
+template <class T, class Container, class Setter>
+class Property<T, Container, Setter, PropertyType::SET>
+: public Property<T, Container, Setter, PropertyType::GETSET>
+{
+public:
+    using Property<T, Container, Setter, PropertyType::GETSET>::Property;
+    operator const T() const = delete;
 };
 
 #define PROPERTIES_BEGIN(Container) \
@@ -71,29 +95,26 @@ public: \
     SimpleProperty<T, PropertyContainer, PropertyType::SET> name
 
 #define PROPERTY_GETSET_4_(T, name, getter, setter) \
-    class : public Property<PropertyContainer> \
+    struct name##_GetterSetter \
     { \
-    public: \
-        using Property<PropertyContainer>::Property; \
-        operator const T() const getter; \
-        void operator= (T&& value) setter; \
-    } name
+        static T get(PropertyContainer* self) getter \
+        static void set(PropertyContainer* self) setter \
+    }; \
+    Property<T, PropertyContainer, name##_GetterSetter, PropertyType::GETSET> name
 
 #define PROPERTY_GET_3_(T, name, getter) \
-    class : public Property<PropertyContainer> \
+    struct name##_Getter \
     { \
-    public: \
-        using Property<PropertyContainer>::Property; \
-        operator const T() const getter; \
-    } name
+        static T get(PropertyContainer* self) getter \
+    }; \
+    Property<T, PropertyContainer, name##_Getter, PropertyType::GET> name
 
 #define PROPERTY_SET_3_(T, name, setter) \
-    class : public Property<PropertyContainer> \
+    struct name##_Setter \
     { \
-    public: \
-        using Property<PropertyContainer>::Property; \
-        void operator= (T&& value) setter; \
-    } name
+        static void set(PropertyContainer* self) setter \
+    }; \
+    Property<T, PropertyContainer, name##_Setter, PropertyType::SET> name
 
 #define PROPERTY_GETSET_(_1, _2, _3, _4, NAME,...) NAME
 #define PROPERTY_GETSET(...) \
